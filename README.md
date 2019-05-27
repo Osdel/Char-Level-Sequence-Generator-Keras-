@@ -15,7 +15,7 @@ python dino_names_train.py dataset_path output_json_configuration_path output_we
 Tx n_a epochs
 
 ```
-The parameter Tx will be removed soon, by now defines the max lenght of the sequences and all names are padded to size Tx. For more information about the command line arguments, type:
+The parameter Tx will be removed soon, by now it defines the max lenght of the sequences and all names are padded to size Tx. For more information about the command line arguments, type:
 ```bash
 python dino_names_train.py -h
 
