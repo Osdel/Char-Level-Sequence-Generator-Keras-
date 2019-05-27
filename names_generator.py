@@ -2,7 +2,6 @@ import tensorflow as tf
 from keras.utils import to_categorical
 import numpy as np
 import keras.backend as K
-from utils import create_dataset
 from keras.layers import Dense, Activation, Dropout, Input, LSTM, Reshape, Lambda, RepeatVector
 from keras.models import load_model, Model
 import json
@@ -84,7 +83,7 @@ def predict_and_sample(inference_model, x_initializer, a_initializer, c_initiali
   
   return indices, generated_text
 
-def generate(Ty,samples_to_generate,n_a,vocab_size,ix_to_char, post_processing_fn=None):
+def generate(model_weights_file_path,Ty,samples_to_generate,n_a,vocab_size,ix_to_char, post_processing_fn=None):
   """
   Main API function. Generate n samples using the inference model.
   Arguments:
@@ -94,7 +93,7 @@ def generate(Ty,samples_to_generate,n_a,vocab_size,ix_to_char, post_processing_f
     ix_to_char: dictionary which maps from int to char, where the int represent the one_hot encoding index 
   """
   model = inference_model(Ty,n_a,vocab_size)
-  model.load_weights('inference_model_weights.h5')
+  model.load_weights(model_weights_file_path)
 
   a_initializer = np.zeros((1, n_a))
   c_initializer = np.zeros((1, n_a))
@@ -116,14 +115,14 @@ def generate(Ty,samples_to_generate,n_a,vocab_size,ix_to_char, post_processing_f
   return outputs
 
 
-def main(Ty,samples_to_generate,config_path='config.json'):
+def main(weights_file_path,Ty,samples_to_generate,config_path='config.json'):
   with open(config_path,'r') as f:
     config = json.load(f)
     vocab_size = config['vocab_size']
     n_a = config['n_a']
     ix_to_char = {int(x):config['ix_to_char'][x] for x in config['ix_to_char']}
 
-  outputs = generate(Ty,samples_to_generate,n_a,vocab_size,ix_to_char,\
+  outputs = generate(weights_file_path,Ty,samples_to_generate,n_a,vocab_size,ix_to_char,\
     post_processing_fn=lambda x:x.split('\n')[0])
   for g in outputs:
     print(g)
@@ -131,8 +130,9 @@ def main(Ty,samples_to_generate,config_path='config.json'):
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Generate character-level sequences using a pretrained keras model')
+  parser.add_argument('weights', type=str, help='path to the pretrained model weights (h5)')
   parser.add_argument('conf', type=str, help='path to the pretrained model configuration (json)')
   parser.add_argument('ty',type=int, help='lenght of the generated sequence')
   parser.add_argument('n', type=int, help='number of sequences to generate')
   args = parser.parse_args(sys.argv[1:])
-  main(args.ty,args.n,args.conf)
+  main(args.weights, args.ty,args.n,args.conf)
